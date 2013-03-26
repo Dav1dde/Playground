@@ -1,0 +1,49 @@
+{
+    "compiler" : {
+        "d" : {
+            "name" : "",
+            "version_flags" : ["foo", "bar"],
+            "additional_flags" : [],
+            "import_paths" : []
+        },
+    
+        "c" : {
+            "name" : "",
+            "additional_flags" : ["-Wall"],
+            "import_paths" : ["trololo"]
+        }
+    },
+    
+    "builder" : {
+        "out_file" : "a.out",
+        "out_path" : "bin",
+        "build_prefix" : "build",
+        "scan_paths" : ["foo/bar", "src/d/gl3n/"],
+        "libraries" : {
+            "windows" : [],
+            "windows32" : [],
+            "windows64" : [],
+            
+            "linux" : [],
+            "linux32" : [],
+            "linux64" : [],
+            
+            "osx" : [],
+            "osx32" : [],
+            "osx64" : []
+        },
+        "linker" : {
+            "windows" : [],
+            "windows32" : [],
+            "windows64" : [],
+            
+            "linux" : [],
+            "linux32" : [],
+            "linux64" : [],
+            
+            "osx" : [],
+            "osx32" : [],
+            "osx64" : []
+        }
+    }
+}   
