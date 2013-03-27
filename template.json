@@ -1,16 +1,23 @@
 {
     "compiler" : {
-        "d" : {
-            "name" : "",
+        "dmd" : {
+            "name" : "dmd",
             "version_flags" : [],
             "additional_flags" : [],
-            "import_paths" : []
+            "import_paths" : [],
+            "compiles" : "d"
         },
-    
-        "c" : {
-            "name" : "",
+        "gcc" : {
+            "name" : "gcc",
             "additional_flags" : [],
-            "import_paths" : []
+            "import_paths" : [],
+            "compiles" : "c"
+        },
+        "dmc" : {
+            "name" : "dmc",
+            "additional_flags" : [],
+            "import_paths" : [],
+            "compiles" : "c"
         }
     },
     
@@ -31,6 +38,62 @@
             "osx" : [],
             "osx32" : [],
             "osx64" : []
+        },
+        "compiler" : {
+            "windows" : {
+                "c" : {
+                    "name" : "dmc",
+                    "name32" : "",
+                    "name64" : "",
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "d" : {
+                    "name" : "",
+                    "name32" : "",
+                    "name64" : "",
+                    "version_flags" : [],
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "linker" : ""
+            },
+            "linux" : {
+                "c" : {
+                    "name" : "gcc",
+                    "name32" : "",
+                    "name64" : "",
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "d" : {
+                    "name" : "",
+                    "name32" : "",
+                    "name64" : "",
+                    "version_flags" : [],
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "linker" : ""
+            },
+            "osx" : {
+                "c" : {
+                    "name" : "gcc",
+                    "name32" : "",
+                    "name64" : "",
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "d" : {
+                    "name" : "",
+                    "name32" : "",
+                    "name64" : "",
+                    "version_flags" : [],
+                    "additional_flags" : [],
+                    "import_paths" : []
+                },
+                "linker" : ""
+            }
         },
         "linker" : {
             "windows" : [],

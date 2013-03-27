@@ -50,6 +50,16 @@ unittest {
     }
 }
 
+template osstring() {
+    version(Windows) {
+        enum osstring = "windows";
+    } else version(linux) {
+        enum osstring = "linux";
+    } else version(OSX) {
+        enum osstring = "osx";
+    }
+}
+
 abstract class Compiler {
     string build_prefix;
     string[] import_paths;
@@ -150,7 +160,7 @@ class GCC : CCompiler {
     }
 }
 
-Compiler get_compiler(string compiling_ext, string name) {
+Compiler get_compiler(string compiling_ext, string name = "") {
     if(compiling_ext == ".d" || compiling_ext == "d") {
         if(name.length) {
             switch(name) {
@@ -187,6 +197,14 @@ Compiler get_compiler(string compiling_ext, string name) {
     } else {
         throw new Exception("No compiler found for extension %s and name %s.".format(compiling_ext, name));
     }
+}
+
+Linker get_linker(string name) {
+    if(name.length && name != "dmd") {
+        throw new Exception("Only dmd as linker supported for now");
+    }
+    
+    return new DMD();
 }
 
 interface Cache {
@@ -446,20 +464,19 @@ class Builder {
     static Builder from_json(string file, Cache cache = null) {
         auto json = parseJSON(file.readText());
         
-        auto compiler = json["compiler"].object;
+        auto jcompiler = json["compiler"].object;
         
-        if("d" !in compiler) {
+        if("d" !in jcompiler) {
             throw new Exception("Need at least a D compiler in build.json");
         }
         
-        Compiler[] compiler_objects;
-        Linker linker = new DMD(); // TODO: support other linkers
+        Compiler[string] compiler_objects;
         
-        foreach(name; compiler.byKey()) {
-            auto compiler_data = compiler[name].object;
+        foreach(name; jcompiler.byKey()) {
+            auto compiler_data = jcompiler[name].object;
             
             string cname = "name" in compiler_data ? compiler_data["name"].str : "";
-            auto compiler_object = get_compiler(name, cname);
+            auto compiler_object = get_compiler(compiler_data["compiles"].str, cname);
             
             auto additional_flags = compiler_data["additional_flags"].array.map!(x => x.str).array;
             auto import_paths = compiler_data["import_paths"].array.map!(x => x.str)().array;
@@ -473,7 +490,7 @@ class Builder {
                 }
             }
             
-            compiler_objects ~= compiler_object;
+            compiler_objects[name] = compiler_object;
         }
         
         if(cache is null) {
@@ -481,8 +498,36 @@ class Builder {
         }
         
         auto jbuilder = json["builder"].object;
+        Compiler compiler[];
         
-        auto builder = new Builder(cache, linker, compiler_objects);
+        auto cdata = jbuilder[osstring!()].object;
+        
+        foreach(ext; TypeTuple!("c", "d")) {
+            string name = cdata[ext]["name"].str;
+            
+            string s = is32bit() ? "name32" : "name64";
+            string name_s = cdata[ext][s].str;
+            if(name_s.length) {
+                name = name_s;
+            }
+            
+            Compiler c = name.length ? compiler_objects[name] : get_compiler(ext);
+            
+            c.additional_flags ~= cdata[ext]["additional_flags"].array.map!(x => x.str)().array;
+            c.import_paths ~= cdata[ext]["import_paths"].array.map!(x => x.str)().array;
+            
+            if("version_flags" in cdata[ext].object) {
+                foreach(jversion_flag; cdata[ext]["version_flags"].array) {
+                    c.additional_flags ~= c.version_(jversion_flag.str);
+                }
+            }
+            
+            compiler ~= c;
+        }
+        
+        Linker linker = get_linker(cdata["linker"].str); // TODO: support other linkers
+        
+        auto builder = new Builder(cache, linker, compiler);
         
         builder.out_path = jbuilder["out_path"].str;
         builder.out_file = jbuilder["out_file"].str;
