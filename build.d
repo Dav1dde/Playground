@@ -10,6 +10,7 @@ private {
     import std.string : format, stripRight;
     import std.parallelism : TaskPool;
     import std.exception : enforce, collectException;
+    import std.typetuple : TypeTuple;
     import std.getopt;
     import std.digest.md;
     import std.digest.digest;
@@ -312,9 +313,9 @@ class Builder {
         }
     }
 
-    string[] libraries_win;
-    string[] libraries_win32;
-    string[] libraries_win64;
+    string[] libraries_windows;
+    string[] libraries_windows32;
+    string[] libraries_windows64;
     string[] libraries_linux;
     string[] libraries_linux32;
     string[] libraries_linux64;
@@ -325,9 +326,9 @@ class Builder {
     @property string[] libraries() {
         version(Windows) {
             static if(is32bit()) {
-                return libraries_win ~ libraries_win32;
+                return libraries_windows ~ libraries_windows32;
             } else {
-                return libraries_win ~ libraries_win64;
+                return libraries_windows ~ libraries_windows64;
             }
         } else version(linux) {
             static if(is32bit()) {
@@ -344,9 +345,9 @@ class Builder {
         }
     }
 
-    string[] linker_options_win;
-    string[] linker_options_win32;
-    string[] linker_options_win64;
+    string[] linker_options_windows;
+    string[] linker_options_windows32;
+    string[] linker_options_windows64;
     string[] linker_options_linux;
     string[] linker_options_linux32;
     string[] linker_options_linux64;
@@ -357,9 +358,9 @@ class Builder {
     @property string[] linker_options() {
         version(Windows) {
             static if(is32bit()) {
-                return linker_options_win ~ linker_options_win32;
+                return linker_options_windows ~ linker_options_windows32;
             } else {
-                return linker_options_win ~ linker_options_win64;
+                return linker_options_windows ~ linker_options_windows64;
             }
         } else version(linux) {
             static if(is32bit()) {
@@ -408,6 +409,10 @@ class Builder {
     }
 
     void compile(TaskPool task_pool=null) {
+        if(scan_paths.length == 0) {
+            throw new Exception("No files to compile");
+        }
+
         foreach(path; scan_paths) {
             auto files = map!(x => x.name)(filter!(e => compiler.keys.canFind(e.name.extension))(dirEntries(path, path.mode))).array();
 
@@ -486,9 +491,21 @@ class Builder {
         foreach(jscan_path; jbuilder["scan_paths"].array) {
             builder.add_scan_path(jscan_path.str.buildNormalizedPath());            
         }
-
-        writefln("%s", builder.scan_paths);
         
+        auto jlibraries = jbuilder["libraries"].object;
+        foreach(name; TypeTuple!("windows", "windows32", "windows64",
+                                 "linux", "linux32", "linux64",
+                                 "osx", "osx32", "osx64")) {
+            mixin(`builder.libraries_` ~ name ~ ` = jlibraries["` ~ name ~ `"].array.map!(x => x.str)().array;`);
+        }
+        
+        auto jlinker = jbuilder["linker"].object;
+        foreach(name; TypeTuple!("windows", "windows32", "windows64",
+                                 "linux", "linux32", "linux64",
+                                 "osx", "osx32", "osx64")) {
+            mixin(`builder.linker_options_` ~ name ~ ` = jlinker["` ~ name ~ `"].array.map!(x => x.str)().array;`);
+        }
+
         return builder;
     }
 }
@@ -543,6 +560,15 @@ int main(string[] args) {
     }
 
     auto builder = Builder.from_json(json_file, cache);
+
+    collectException(rmdirRecurse(builder.out_file));
+    
+    builder.compile(task_pool);
+    builder.link();
+    
+    if(!no_cache) {
+        md5_cache.save(cache_file);
+    }
 
     return 0;
 }

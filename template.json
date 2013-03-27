@@ -2,15 +2,15 @@
     "compiler" : {
         "d" : {
             "name" : "",
-            "version_flags" : ["foo", "bar"],
+            "version_flags" : [],
             "additional_flags" : [],
             "import_paths" : []
         },
     
         "c" : {
             "name" : "",
-            "additional_flags" : ["-Wall"],
-            "import_paths" : ["trololo"]
+            "additional_flags" : [],
+            "import_paths" : []
         }
     },
     
@@ -18,7 +18,7 @@
         "out_file" : "a.out",
         "out_path" : "bin",
         "build_prefix" : "build",
-        "scan_paths" : ["foo/bar", "src/d/gl3n/"],
+        "scan_paths" : [],
         "libraries" : {
             "windows" : [],
             "windows32" : [],
