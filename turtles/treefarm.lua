@@ -115,7 +115,7 @@ function main()
     end
 
     if rows == 1 then
-        row_width = 1
+        row_width = 0
     end
 
     while true do
@@ -139,11 +139,11 @@ function main()
             move_n(row_length)
         else
             move()
-            mod = -row_width
+            mod = -1
         end
 
         turtle.turnRight()
-        move_n(rows * row_width + mod)
+        move_n((rows-1)*(row_width+1) + mod)
         down()
         turtle.turnRight()
     end
