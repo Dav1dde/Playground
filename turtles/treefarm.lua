@@ -1,6 +1,7 @@
 function move_n(n)
     for i=0,n do
         move()
+        suck()
     end
 end
 
@@ -24,6 +25,28 @@ function turn_left_right_odd(n)
         turtle.turnLeft()
     else
         turtle.turnRight()
+    end
+end
+
+function slot_is_sapling(n)
+    if turtle.getItemCount(n) == 0 then
+        return false
+    end
+
+    turtle.select(n)
+    return (turtle.compareTo(13) or turtle.compareTo(14)
+         or turtle.compareTo(15) or turtle.compareTo(16))
+end
+
+function move_saplings()
+    for i=1,12 do
+        if slot_is_sapling(i) then
+            for ii=13,16 do
+                if turtle.transferTo(ii) and turtle.getItemCount(i) == 0 then
+                    break
+                end
+            end
+        end
     end
 end
 
@@ -60,6 +83,8 @@ function harvest()
             moved_up = moved_up + 1
         end
     end
+
+    move_saplings()
 
     if moved_up > 0 then
         for i=0,(moved_up-1) do
