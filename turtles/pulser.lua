@@ -7,7 +7,8 @@ function main()
     inb = inb or 0.1
 
     if not side and not sleep then
-        term.write("pulser side sleep")
+        term.write("pulser side sleep [pause]")
+        return
     end
 
     while true do
