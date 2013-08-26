@@ -55,12 +55,14 @@
                         replacefile.data[kv[0].toUpperCase()] = kv[1];
                     }
                 });
+
+                console.log(replacefile.data);
             }
 
             function handleReplaceFile(evt) {
                 var file = evt.target.files[0];
                 readFile(file, function(text) {
-                    $('#repl').val(text);
+//                     $('#repl').val(text);
                     updateReplaceText(text);
                     trigger();
                 });
@@ -106,7 +108,7 @@
                         var s = buffer.substr(0, ii);
 
                         if(repl[s.toUpperCase()]) {
-                            found = repl[s];
+                            found = repl[s.toUpperCase()];
                             add = s.length;
                             break;
                         }
@@ -123,11 +125,11 @@
                 $('#replacefile').change(handleReplaceFile);
                 $('#inputfile').change(handleInputFile);
 
-                $('#repl').bind('input propertychange', function() {
-                    console.log('change')
-                    updateReplaceText($('#repl').val());
-                    trigger();
-                });
+//                 $('#repl').bind('input propertychange', function() {
+//                     console.log('change')
+//                     updateReplaceText($('#repl').val());
+//                     trigger();
+//                 });
 
                 $('#in').bind('input propertychange', function() {
                     toreplace.text = $('#in').val();
@@ -170,14 +172,14 @@
 
             .textarea {
                 width: 90%;
-                min-height: 230px;
+                min-height: 190px;
                 margin-left: 5%;
                 margin-top: 10px;
             }
 
             textarea {
                 width: 100%;
-                height: 220px;
+                height: 170px;
             }
 
         </style>
@@ -192,9 +194,9 @@
                 <span class="pre">Replace Datei:</span>
                 <input type="file" id="replacefile" name="files[]" single />
             </div>
-            <div class="textarea">
+<!--            <div class="textarea">
                 <textarea id="repl"></textarea>
-            </div>
+            </div>-->
         </div>
 
         <div class="outer">
@@ -212,7 +214,7 @@
                 <button id="save" name="Speichern" type="button">Speichern</button>
             </div>
             <div class="textarea">
-                <textarea id="out" disabled></textarea>
+                <textarea id="out"></textarea>
             </div>
         </div>
     </body>
