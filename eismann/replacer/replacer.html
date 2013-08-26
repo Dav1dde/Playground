@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Replacer</title>
+
+        <script src="jquery-1.10.2.min.js"></script>
+
+<!--         Javascript -->
+        <script type="text/javascript">
+            if (window.File && window.FileReader) {
+            } else {
+                alert('Browser zu alt!');
+            }
+
+            var toreplace = {
+                text: ""
+            };
+            var replacefile = {
+                text: "",
+                data: {}
+            };
+
+            function readFile(file, cb) {
+                var reader = new FileReader();
+                reader.onload = (function(f) {
+                    cb(f.target.result);
+                });
+                reader.readAsText(file);
+            }
+
+            function handleInputFile(evt) {
+                var file = evt.target.files[0];
+                readFile(file, function(text) {
+                    toreplace.text = text;
+                    $("#in").val(text);
+                    trigger();
+                });
+            }
+
+            function updateReplaceText(text) {
+                replacefile.text = text;
+                replacefile.data = {};
+                var result = text.match(/(\w+\s*=\s*\w+)/g);
+
+                if(!result) {
+                    error("Kaputte Replace-Datei");
+                    return;
+                }
+
+                $.each(result, function(index, value) {
+                    kv = value.split(/\s*=\s*/);
+
+                    if(kv[0].legth != 0) {
+                        replacefile.data[kv[0].toUpperCase()] = kv[1];
+                    }
+                });
+            }
+
+            function handleReplaceFile(evt) {
+                var file = evt.target.files[0];
+                readFile(file, function(text) {
+                    $('#repl').val(text);
+                    updateReplaceText(text);
+                    trigger();
+                });
+            }
+
+            function error(msg) {
+                console.log(msg);
+                $('#error').text(msg);
+            }
+
+            function trigger() {
+                console.log("trigger");
+
+                if(toreplace.text.length == 0 || Object.keys(replacefile.data).length == 0) {
+                    return;
+                }
+
+                var longest = 0;
+                $.each(replacefile.data, function(key, value) {
+                    longest = Math.max(key.length, longest);
+                })
+
+                var repl = replacefile.data;
+
+                var result = "";
+                var buffer = "";
+                var text = toreplace.text;
+                var length = text.length;
+                for(var i = 0;;) {
+                    var c = text.charAt(i);
+                    if(c.length == 0) break;
+
+                    var islower = c.toLowerCase() == c
+                    var found = c;
+                    var add = 1;
+
+                    buffer = c
+                    for(var ii = 1; ii <= longest; ii++) {
+                        buffer += text.charAt(i+ii)
+                    }
+
+                    for(var ii = buffer.length; ii > 0; ii--) {
+                        var s = buffer.substr(0, ii);
+
+                        if(repl[s.toUpperCase()]) {
+                            found = repl[s];
+                            add = s.length;
+                            break;
+                        }
+                    }
+
+                    result += found;
+                    i += add;
+                }
+
+                $("#out").val(result);
+            }
+
+            $(function() {
+                $('#replacefile').change(handleReplaceFile);
+                $('#inputfile').change(handleInputFile);
+
+                $('#repl').bind('input propertychange', function() {
+                    console.log('change')
+                    updateReplaceText($('#repl').val());
+                    trigger();
+                });
+
+                $('#in').bind('input propertychange', function() {
+                    toreplace.text = $('#in').val();
+                    trigger();
+                });
+
+                $('#save').on('click', function() {
+                    var data = $('#out').val();
+                    var uri = "data:application/octet-stream," + encodeURIComponent(data)
+                    location.href = uri;
+                });
+            });
+        </script>
+
+<!--         CSS -->
+        <style type="text/css">
+            #body {
+                margin: 5px;
+            }
+
+            #error {
+                color: #ff0000;
+                font-weight: bold;
+            }
+
+            .alignright {
+                text-align: right;
+            }
+
+            #save {
+                margin-right: 5%;
+                margin-top: 20px;
+            }
+
+            .outer {
+                border: 1px solid gray;
+                margin: 5px;
+                padding: 2px;
+            }
+
+            .textarea {
+                width: 90%;
+                min-height: 230px;
+                margin-left: 5%;
+                margin-top: 10px;
+            }
+
+            textarea {
+                width: 100%;
+                height: 220px;
+            }
+
+        </style>
+    </head>
+
+<!--     Body -->
+    <body>
+        <div><span id="error"></span></div>
+
+        <div class="outer">
+            <div>
+                <span class="pre">Replace Datei:</span>
+                <input type="file" id="replacefile" name="files[]" single />
+            </div>
+            <div class="textarea">
+                <textarea id="repl"></textarea>
+            </div>
+        </div>
+
+        <div class="outer">
+            <div>
+                <span class="pre">Input Datei:</span>
+                <input type="file" id="inputfile" name="files[]" single />
+            </div>
+            <div class="textarea">
+                <textarea id="in"></textarea>
+            </div>
+        </div>
+
+        <div class="outer">
+            <div class="alignright">
+                <button id="save" name="Speichern" type="button">Speichern</button>
+            </div>
+            <div class="textarea">
+                <textarea id="out" disabled></textarea>
+            </div>
+        </div>
+    </body>
+</html>
