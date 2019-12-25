@@ -1,0 +1,8 @@
+[package]
+name = "day12"
+version = "0.1.0"
+authors = ["David Herberth <github@dav1d.de>"]
+
+[dependencies]
+itertools = "0.8.2"
+num = "0.2"
