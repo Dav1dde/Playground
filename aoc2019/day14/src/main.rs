@@ -8,7 +8,7 @@ use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 struct Chemical {
-    quantity: u32,
+    quantity: u64,
     name: String
 }
 
@@ -19,11 +19,11 @@ impl Chemical {
         Chemical { quantity: quantity.parse().unwrap(), name: name.to_string() }
     }
 
-    fn scale(&self, scale: u32) -> Chemical {
+    fn scale(&self, scale: u64) -> Chemical {
         Chemical { quantity: self.quantity * scale, name: self.name.clone() }
     }
 
-    fn with_quantity(&self, quantity: u32) -> Chemical {
+    fn with_quantity(&self, quantity: u64) -> Chemical {
         Chemical { quantity: quantity, name: self.name.clone() }
     }
 }
@@ -43,12 +43,12 @@ impl Reaction {
         Reaction { requires: requires, produces: Chemical::parse(right) }
     }
 
-    fn produces(&self, name: &str, quantity: u32) -> Option<(Vec<Chemical>, Chemical)> {
+    fn produces(&self, name: &str, quantity: u64) -> Option<(Vec<Chemical>, Chemical)> {
         if self.produces.name.as_str() != name {
             return None;
         }
 
-        let scale = (quantity as f32 / self.produces.quantity as f32).ceil() as u32;
+        let scale = (quantity as f64 / self.produces.quantity as f64).ceil() as u64;
 
         let requires = self.requires.iter()
             .map(|chemical| chemical.scale(scale))
@@ -71,7 +71,7 @@ impl System {
         System { reactions: reactions }
     }
 
-    fn produce(&self, name: &str, quantity: u32, store: &mut HashMap<String, u32>) -> Vec<Chemical> {
+    fn produce(&self, name: &str, quantity: u64, store: &mut HashMap<String, u64>) -> Vec<Chemical> {
         let mut total = Vec::new();
 
         for reaction in self.reactions.iter() {
@@ -85,7 +85,6 @@ impl System {
             for chemical in result.0 {
                 let stored = *store.get(&chemical.name).unwrap_or(&0);
 
-                // TODO make this nicer
                 let mut quant = 0;
                 if stored >= chemical.quantity {
                     store.insert(chemical.name.clone(), stored - chemical.quantity);
@@ -111,19 +110,40 @@ impl System {
 
 
 fn main() {
-    let s1 = System::parse(fs::read_to_string("../a.txt").unwrap().as_str());
-    let s2 = System::parse(fs::read_to_string("../b.txt").unwrap().as_str());
-    let s3 = System::parse(fs::read_to_string("../input.txt").unwrap().as_str());
+    let system = System::parse(fs::read_to_string("../input.txt").unwrap().as_str());
 
-    let system = s3;
-
-    // println!("{:?}", system);
-    let x = system.produce("FUEL", 1, &mut HashMap::new()).iter()
+    let one_fuel = system.produce("FUEL", 1, &mut HashMap::new()).iter()
         .map(|c| (c.name.clone(), c.quantity))
         .into_group_map()
         .into_iter()
-        .map(|(k, v)| (k, v.into_iter().sum::<u32>()))
-        .into_group_map();
+        .map(|(k, v)| (k, v.into_iter().sum::<u64>()))
+        .collect::<HashMap<_, _>>();
+    println!("Ore for one fuel: {}", one_fuel.get(&"ORE".to_string()).unwrap());
 
-    println!("{:?}", x);
+    let mut store = HashMap::new();
+
+    let target = 1000000000000;
+    let mut step_size = 1000000000;
+    let mut fuel = 0;
+    let mut used = 0;
+    loop {
+        let x = system.produce("FUEL", step_size, &mut store).iter()
+            .map(|c| (c.name.clone(), c.quantity))
+            .into_group_map()
+            .into_iter()
+            .map(|(k, v)| (k, v.into_iter().sum::<u64>()))
+            .collect::<HashMap<_, _>>();
+
+        let additional = x.get(&"ORE".to_string()).unwrap();
+        if (used + additional) > target {
+            if step_size == 1 {
+                break;
+            }
+            step_size = step_size / 2;
+        } else {
+            used += additional;
+            fuel += step_size;
+        }
+    }
+    println!("fuel: {}, used ore: {} ({} leftover)", fuel, used, target - used);
 }
